@@ -48,8 +48,8 @@ namespace StarForce
                 return;
             }
 
-            GameEntry.Base.GameVersion = GameEntry.Config.BuildInfo.GameVersion;
-            GameEntry.Base.InternalApplicationVersion = GameEntry.Config.BuildInfo.InternalVersion;
+            GameEntry.Base.GameVersion = m_BuildInfo.GameVersion;
+            GameEntry.Base.InternalApplicationVersion = m_BuildInfo.InternalApplicationVersion;
         }
 
         public void InitDefaultDictionary()
