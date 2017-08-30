@@ -194,7 +194,7 @@ namespace StarForce
         {
             UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs ne = (UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs)e;
             m_LatestVersionComplete = true;
-            Log.Warning("Download latest resource version list from '{0}' success.", ne.DownloadUri);
+            Log.Info("Download latest resource version list from '{0}' success.", ne.DownloadUri);
         }
 
         private void OnVersionListUpdateFailure(object sender, GameEventArgs e)

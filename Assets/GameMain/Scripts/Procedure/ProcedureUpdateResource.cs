@@ -141,7 +141,7 @@ namespace StarForce
         private void OnResourceUpdateSuccess(object sender, GameEventArgs e)
         {
             ResourceUpdateSuccessEventArgs ne = (ResourceUpdateSuccessEventArgs)e;
-            //Log.Info("Update resource '{0}' success.", ne.Name);
+            Log.Info("Update resource '{0}' success.", ne.Name);
 
             for (int i = 0; i < m_UpdateLengthData.Count; i++)
             {
