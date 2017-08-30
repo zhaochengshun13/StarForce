@@ -16,4 +16,6 @@
 *.pidb
 *.svd
 
+/Assets/StreamingAssets/*
+!/Assets/StreamingAssets/.gitkeep
 /ProjectSettings/ProjectVersion.txt
