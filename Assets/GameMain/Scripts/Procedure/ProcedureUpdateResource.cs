@@ -14,6 +14,7 @@ namespace StarForce
         private int m_UpdateTotalZipLength = 0;
         private int m_UpdateSuccessCount = 0;
         private List<UpdateLengthData> m_UpdateLengthData = new List<UpdateLengthData>();
+        private UpdateResourceForm m_UpdateResourceForm = null;
 
         public override bool UseNativeDialog
         {
@@ -32,6 +33,7 @@ namespace StarForce
             m_UpdateTotalZipLength = 0;
             m_UpdateSuccessCount = 0;
             m_UpdateLengthData.Clear();
+            m_UpdateResourceForm = null;
 
             GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceCheckComplete, OnResourceCheckComplete);
             GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateStart, OnResourceUpdateStart);
@@ -45,6 +47,12 @@ namespace StarForce
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
+            if (m_UpdateResourceForm != null)
+            {
+                Object.Destroy(m_UpdateResourceForm.gameObject);
+                m_UpdateResourceForm = null;
+            }
+
             GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceCheckComplete, OnResourceCheckComplete);
             GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateStart, OnResourceUpdateStart);
             GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateChanged, OnResourceUpdateChanged);
@@ -69,6 +77,11 @@ namespace StarForce
 
         private void StartUpdateResources(object userData)
         {
+            if (m_UpdateResourceForm == null)
+            {
+                m_UpdateResourceForm = Object.Instantiate(GameEntry.Config.UpdateResourceFormTemplate);
+            }
+
             GameEntry.Resource.UpdateResources();
             Log.Info("Start update resources...");
         }
@@ -115,6 +128,7 @@ namespace StarForce
                 {
                     Log.Warning("Update resource '{0}' is invalid.", ne.Name);
                     m_UpdateLengthData[i].Length = 0;
+                    RefreshProgress();
                     return;
                 }
             }
@@ -131,6 +145,7 @@ namespace StarForce
                 if (m_UpdateLengthData[i].Name == ne.Name)
                 {
                     m_UpdateLengthData[i].Length = ne.CurrentLength;
+                    RefreshProgress();
                     return;
                 }
             }
@@ -149,6 +164,7 @@ namespace StarForce
                 {
                     m_UpdateLengthData[i].Length = ne.ZipLength;
                     m_UpdateSuccessCount++;
+                    RefreshProgress();
                     return;
                 }
             }
@@ -174,6 +190,7 @@ namespace StarForce
                 if (m_UpdateLengthData[i].Name == ne.Name)
                 {
                     m_UpdateLengthData.Remove(m_UpdateLengthData[i]);
+                    RefreshProgress();
                     return;
                 }
             }
@@ -190,6 +207,39 @@ namespace StarForce
         private void ProcessUpdateAllComplete()
         {
             m_UpdateAllComplete = true;
+        }
+
+        private void RefreshProgress()
+        {
+            int currentTotalUpdateLength = 0;
+            for (int i = 0; i < m_UpdateLengthData.Count; i++)
+            {
+                currentTotalUpdateLength += m_UpdateLengthData[i].Length;
+            }
+
+            float progressTotal = (float)currentTotalUpdateLength / m_UpdateTotalZipLength;
+            string descriptionText = GameEntry.Localization.GetString("UpdateResource.Tips", m_UpdateSuccessCount.ToString(), m_UpdateCount.ToString(), GetLengthString(currentTotalUpdateLength), GetLengthString(m_UpdateTotalZipLength), progressTotal, GetLengthString((int)GameEntry.Download.CurrentSpeed));
+            m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);
+        }
+
+        private string GetLengthString(int length)
+        {
+            if (length < 1024)
+            {
+                return string.Format("{0} Bytes", length.ToString());
+            }
+
+            if (length < 1024 * 1024)
+            {
+                return string.Format("{0} KB", (length / 1024f).ToString("F2"));
+            }
+
+            if (length < 1024 * 1024 * 1024)
+            {
+                return string.Format("{0} MB", (length / 1024f / 1024f).ToString("F2"));
+            }
+
+            return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
         }
 
         private class UpdateLengthData

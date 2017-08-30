@@ -587,7 +587,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11499388, guid: adb3eb1c35fcff14f89fba7b05c9d71c, type: 2}
       propertyPath: m_EditorResourceMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11497722, guid: adb3eb1c35fcff14f89fba7b05c9d71c, type: 2}
       propertyPath: m_ResourceMode
@@ -678,6 +678,8 @@ MonoBehaviour:
     type: 3}
   m_DefaultDictionaryTextAsset: {fileID: 4900000, guid: 00759be143ffa5445b151c2540612e8f,
     type: 3}
+  m_UpdateResourceFormTemplate: {fileID: 11487720, guid: a6c731de80e9d824d8f657301a357269,
+    type: 2}
 --- !u!1 &1454214586
 GameObject:
   m_ObjectHideFlags: 0
