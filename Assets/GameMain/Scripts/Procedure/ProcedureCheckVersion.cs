@@ -1,5 +1,6 @@
 ﻿using GameFramework;
 using GameFramework.Event;
+using GameFramework.Resource;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using ProcedureOwner = GameFramework.Fsm.IFsm<GameFramework.Procedure.IProcedureManager>;
@@ -8,7 +9,8 @@ namespace StarForce
 {
     public class ProcedureCheckVersion : ProcedureBase
     {
-        private bool m_ResourceInitComplete = false;
+        private bool m_LatestVersionComplete = false;
+        private VersionInfo m_VersionInfo = null;
 
         public override bool UseNativeDialog
         {
@@ -22,12 +24,13 @@ namespace StarForce
         {
             base.OnEnter(procedureOwner);
 
-            m_ResourceInitComplete = false;
+            m_LatestVersionComplete = false;
+            m_VersionInfo = null;
 
             GameEntry.Event.Subscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
             GameEntry.Event.Subscribe(WebRequestFailureEventArgs.EventId, OnWebRequestFailure);
-            GameEntry.Event.Subscribe(VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
-            GameEntry.Event.Subscribe(VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
+            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
+            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
 
             RequestVersion();
         }
@@ -36,8 +39,8 @@ namespace StarForce
         {
             GameEntry.Event.Unsubscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
             GameEntry.Event.Unsubscribe(WebRequestFailureEventArgs.EventId, OnWebRequestFailure);
-            GameEntry.Event.Unsubscribe(VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
-            GameEntry.Event.Unsubscribe(VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
+            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
+            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
 
             base.OnLeave(procedureOwner, isShutdown);
         }
@@ -46,12 +49,27 @@ namespace StarForce
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            if (!m_ResourceInitComplete)
+            if (!m_LatestVersionComplete)
             {
                 return;
             }
 
-            ChangeState<ProcedurePreload>(procedureOwner);
+            ChangeState<ProcedureUpdateResource>(procedureOwner);
+        }
+
+        private void GotoUpdateApp(object userData)
+        {
+            string url = null;
+#if UNITY_EDITOR
+            url = GameEntry.Config.BuildInfo.StandaloneAppUrl;
+#elif UNITY_IOS
+            url = GameEntry.Config.BuildInfo.IosAppUrl;
+#elif UNITY_ANDROID
+            url = GameEntry.Config.BuildInfo.AndroidAppUrl;
+#else
+            url = GameEntry.Config.BuildInfo.StandaloneAppUrl;
+#endif
+            Application.OpenURL(url);
         }
 
         private void RequestVersion()
@@ -111,6 +129,18 @@ namespace StarForce
             GameEntry.WebRequest.AddWebRequest(GameEntry.Config.BuildInfo.CheckVersionUrl, wwwForm, this);
         }
 
+        private void UpdateVersion()
+        {
+            if (GameEntry.Resource.CheckVersionList(m_VersionInfo.InternalResourceVersion) == CheckVersionListResult.Updated)
+            {
+                m_LatestVersionComplete = true;
+            }
+            else
+            {
+                GameEntry.Resource.UpdateVersionList(m_VersionInfo.VersionListLength, m_VersionInfo.VersionListHashCode, m_VersionInfo.VersionListZipLength, m_VersionInfo.VersionListZipHashCode);
+            }
+        }
+
         private void OnWebRequestSuccess(object sender, GameEventArgs e)
         {
             WebRequestSuccessEventArgs ne = (WebRequestSuccessEventArgs)e;
@@ -119,17 +149,16 @@ namespace StarForce
                 return;
             }
 
-            string responseJson = Utility.Converter.GetString(ne.GetWebResponseBytes());
-            VersionInfo versionInfo = Utility.Json.ToObject<VersionInfo>(responseJson);
-            if (versionInfo == null)
+            m_VersionInfo = Utility.Json.ToObject<VersionInfo>(ne.GetWebResponseBytes());
+            if (m_VersionInfo == null)
             {
                 Log.Error("Parse VersionInfo failure.");
                 return;
             }
 
-            Log.Info("Latest game version is '{0}', local game version is '{1}'.", versionInfo.LatestGameVersion, GameEntry.Base.GameVersion);
+            Log.Info("Latest game version is '{0}', local game version is '{1}'.", m_VersionInfo.LatestGameVersion, GameEntry.Base.GameVersion);
 
-            if (versionInfo.ForceGameUpdate)
+            if (m_VersionInfo.ForceGameUpdate)
             {
                 GameEntry.UI.OpenDialog(new DialogParams
                 {
@@ -137,7 +166,7 @@ namespace StarForce
                     Title = GameEntry.Localization.GetString("ForceUpdate.Title"),
                     Message = GameEntry.Localization.GetString("ForceUpdate.Message"),
                     ConfirmText = GameEntry.Localization.GetString("ForceUpdate.UpdateButton"),
-                    OnClickConfirm = delegate (object userData) { Application.OpenURL(versionInfo.GameUpdateUrl); },
+                    OnClickConfirm = GotoUpdateApp,
                     CancelText = GameEntry.Localization.GetString("ForceUpdate.QuitButton"),
                     OnClickCancel = delegate (object userData) { UnityGameFramework.Runtime.GameEntry.Shutdown(ShutdownType.Quit); },
                 });
@@ -145,7 +174,9 @@ namespace StarForce
                 return;
             }
 
-            GameEntry.Resource.InitResources();
+            GameEntry.Resource.UpdatePrefixUri = Utility.Path.GetCombinePath(m_VersionInfo.GameUpdateUrl, GetResourceVersionName(), GetPlatformPath());
+
+            UpdateVersion();
         }
 
         private void OnWebRequestFailure(object sender, GameEventArgs e)
@@ -156,16 +187,54 @@ namespace StarForce
                 return;
             }
 
-            Log.Warning("Check version failure.");
-
-            GameEntry.Resource.InitResources();
+            Log.Warning("Check version failure, error message '{0}'.", ne.ErrorMessage);
         }
 
-        private void OnResourceInitComplete(object sender, GameEventArgs e)
+        private void OnVersionListUpdateSuccess(object sender, GameEventArgs e)
         {
-            m_ResourceInitComplete = true;
+            UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs ne = (UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs)e;
+            m_LatestVersionComplete = true;
+            Log.Info("Download latest resource version list from '{0}' success.", ne.DownloadUri);
+        }
 
-            Log.Info("Init resource complete.");
+        private void OnVersionListUpdateFailure(object sender, GameEventArgs e)
+        {
+            UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs ne = (UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs)e;
+            Log.Warning("Download latest resource version list from '{0}' failure, error message '{1}'.", ne.DownloadUri, ne.ErrorMessage);
+        }
+
+        private string GetResourceVersionName()
+        {
+            string[] splitApplicableGameVersion = GameEntry.Base.GameVersion.Split('.');
+            if (splitApplicableGameVersion.Length != 3)
+            {
+                return string.Empty;
+            }
+
+            return string.Format("{0}_{1}_{2}_{3}", splitApplicableGameVersion[0], splitApplicableGameVersion[1], splitApplicableGameVersion[2], m_VersionInfo.InternalResourceVersion.ToString());
+        }
+
+        private string GetPlatformPath()
+        {
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                case RuntimePlatform.WindowsPlayer:
+                    return "windows";
+                case RuntimePlatform.OSXEditor:
+                case RuntimePlatform.OSXPlayer:
+                    return "osx";
+                case RuntimePlatform.IPhonePlayer:
+                    return "ios";
+                case RuntimePlatform.Android:
+                    return "android";
+                case RuntimePlatform.WSAPlayerX86:
+                case RuntimePlatform.WSAPlayerX64:
+                case RuntimePlatform.WSAPlayerARM:
+                    return "winstore";
+                default:
+                    return string.Empty;
+            }
         }
     }
 }

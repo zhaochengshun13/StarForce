@@ -35,12 +35,12 @@ namespace StarForce
             m_UpdateLengthData.Clear();
             m_UpdateResourceForm = null;
 
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceCheckComplete, OnResourceCheckComplete);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateStart, OnResourceUpdateStart);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateChanged, OnResourceUpdateChanged);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateSuccess, OnResourceUpdateSuccess);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateFailure, OnResourceUpdateFailure);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateAllComplete, OnResourceUpdateAllComplete);
+            GameEntry.Event.Subscribe(ResourceCheckCompleteEventArgs.EventId, OnResourceCheckComplete);
+            GameEntry.Event.Subscribe(ResourceUpdateStartEventArgs.EventId, OnResourceUpdateStart);
+            GameEntry.Event.Subscribe(ResourceUpdateChangedEventArgs.EventId, OnResourceUpdateChanged);
+            GameEntry.Event.Subscribe(ResourceUpdateSuccessEventArgs.EventId, OnResourceUpdateSuccess);
+            GameEntry.Event.Subscribe(ResourceUpdateFailureEventArgs.EventId, OnResourceUpdateFailure);
+            GameEntry.Event.Subscribe(ResourceUpdateAllCompleteEventArgs.EventId, OnResourceUpdateAllComplete);
 
             GameEntry.Resource.CheckResources();
         }
@@ -53,12 +53,12 @@ namespace StarForce
                 m_UpdateResourceForm = null;
             }
 
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceCheckComplete, OnResourceCheckComplete);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateStart, OnResourceUpdateStart);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateChanged, OnResourceUpdateChanged);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateSuccess, OnResourceUpdateSuccess);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateFailure, OnResourceUpdateFailure);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.EventId.ResourceUpdateAllComplete, OnResourceUpdateAllComplete);
+            GameEntry.Event.Unsubscribe(ResourceCheckCompleteEventArgs.EventId, OnResourceCheckComplete);
+            GameEntry.Event.Unsubscribe(ResourceUpdateStartEventArgs.EventId, OnResourceUpdateStart);
+            GameEntry.Event.Unsubscribe(ResourceUpdateChangedEventArgs.EventId, OnResourceUpdateChanged);
+            GameEntry.Event.Unsubscribe(ResourceUpdateSuccessEventArgs.EventId, OnResourceUpdateSuccess);
+            GameEntry.Event.Unsubscribe(ResourceUpdateFailureEventArgs.EventId, OnResourceUpdateFailure);
+            GameEntry.Event.Unsubscribe(ResourceUpdateAllCompleteEventArgs.EventId, OnResourceUpdateAllComplete);
 
             base.OnLeave(procedureOwner, isShutdown);
         }
