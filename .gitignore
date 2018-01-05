@@ -4,6 +4,7 @@
 /[Bb]uild/
 /[Bb]uilds/
 /Assets/AssetStoreTools*
+/.vs/
 
 *.csproj
 *.unityproj
@@ -19,3 +20,4 @@
 /Assets/StreamingAssets/*
 !/Assets/StreamingAssets/.gitkeep
 /ProjectSettings/ProjectVersion.txt
+/UnityPackageManager/manifest.json
