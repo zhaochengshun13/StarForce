@@ -61,13 +61,13 @@ namespace StarForce
         {
             string url = null;
 #if UNITY_EDITOR
-            url = GameEntry.Config.BuildInfo.StandaloneAppUrl;
+            url = GameEntry.BuiltinData.BuildInfo.StandaloneAppUrl;
 #elif UNITY_IOS
-            url = GameEntry.Config.BuildInfo.IosAppUrl;
+            url = GameEntry.BuiltinData.BuildInfo.IosAppUrl;
 #elif UNITY_ANDROID
-            url = GameEntry.Config.BuildInfo.AndroidAppUrl;
+            url = GameEntry.BuiltinData.BuildInfo.AndroidAppUrl;
 #else
-            url = GameEntry.Config.BuildInfo.StandaloneAppUrl;
+            url = GameEntry.BuiltinData.BuildInfo.StandaloneAppUrl;
 #endif
             Application.OpenURL(url);
         }
