@@ -4,7 +4,7 @@ using UnityGameFramework.Runtime;
 
 namespace StarForce
 {
-    public class ConfigComponent : GameFrameworkComponent
+    public class BuiltinDataComponent : GameFrameworkComponent
     {
         [SerializeField]
         private DeviceModelConfig m_DeviceModelConfig = null;
