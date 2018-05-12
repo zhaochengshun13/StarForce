@@ -21,6 +21,13 @@ namespace StarForce
         {
             base.OnEnter(procedureOwner);
 
+#if UNITY_EDITOR
+            if (Application.unityVersion != "2018.1.0f2" || Application.platform != RuntimePlatform.WindowsEditor)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("警告", "此热更新 Demo 使用的资源包仅适用于 Unity 2018.1.0f2、Windows 系统平台版本，您当前使用的 Unity 版本或系统平台不匹配，这可能导致材质丢失等显示错误。", "知道了");
+            }
+#endif
+
             // 构建信息：发布版本时，把一些数据以 Json 的格式写入 Assets/GameMain/Configs/BuildInfo.txt，供游戏逻辑读取。
             GameEntry.BuiltinData.InitBuildInfo();
 
