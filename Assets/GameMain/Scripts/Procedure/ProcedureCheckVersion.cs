@@ -1,7 +1,5 @@
 ﻿using GameFramework;
 using GameFramework.Event;
-using GameFramework.Fsm;
-using GameFramework.Procedure;
 using GameFramework.Resource;
 using UnityEngine;
 using UnityGameFramework.Runtime;
