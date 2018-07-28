@@ -14,7 +14,7 @@
             set;
         }
 
-        public int InternalApplicationVersion
+        public int InternalGameVersion
         {
             get;
             set;

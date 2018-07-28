@@ -35,14 +35,12 @@ namespace StarForce
             m_UpdateLengthData.Clear();
             m_UpdateResourceForm = null;
 
-            GameEntry.Event.Subscribe(ResourceCheckCompleteEventArgs.EventId, OnResourceCheckComplete);
             GameEntry.Event.Subscribe(ResourceUpdateStartEventArgs.EventId, OnResourceUpdateStart);
             GameEntry.Event.Subscribe(ResourceUpdateChangedEventArgs.EventId, OnResourceUpdateChanged);
             GameEntry.Event.Subscribe(ResourceUpdateSuccessEventArgs.EventId, OnResourceUpdateSuccess);
             GameEntry.Event.Subscribe(ResourceUpdateFailureEventArgs.EventId, OnResourceUpdateFailure);
-            GameEntry.Event.Subscribe(ResourceUpdateAllCompleteEventArgs.EventId, OnResourceUpdateAllComplete);
 
-            GameEntry.Resource.CheckResources();
+            GameEntry.Resource.CheckResources(OnCheckResourcesCompleteCallback);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -53,12 +51,10 @@ namespace StarForce
                 m_UpdateResourceForm = null;
             }
 
-            GameEntry.Event.Unsubscribe(ResourceCheckCompleteEventArgs.EventId, OnResourceCheckComplete);
             GameEntry.Event.Unsubscribe(ResourceUpdateStartEventArgs.EventId, OnResourceUpdateStart);
             GameEntry.Event.Unsubscribe(ResourceUpdateChangedEventArgs.EventId, OnResourceUpdateChanged);
             GameEntry.Event.Unsubscribe(ResourceUpdateSuccessEventArgs.EventId, OnResourceUpdateSuccess);
             GameEntry.Event.Unsubscribe(ResourceUpdateFailureEventArgs.EventId, OnResourceUpdateFailure);
-            GameEntry.Event.Unsubscribe(ResourceUpdateAllCompleteEventArgs.EventId, OnResourceUpdateAllComplete);
 
             base.OnLeave(procedureOwner, isShutdown);
         }
@@ -82,20 +78,57 @@ namespace StarForce
                 m_UpdateResourceForm = Object.Instantiate(GameEntry.BuiltinData.UpdateResourceFormTemplate);
             }
 
-            GameEntry.Resource.UpdateResources();
+            GameEntry.Resource.UpdateResources(OnUpdateResourcesComplete);
             Log.Info("Start update resources...");
         }
 
-        private void OnResourceCheckComplete(object sender, GameEventArgs e)
+        private void ProcessUpdateResourcesComplete()
         {
-            ResourceCheckCompleteEventArgs ne = (ResourceCheckCompleteEventArgs)e;
-            Log.Info("Check resource complete, '{0}' resources need to update, zip length is '{1}', unzip length is '{2}'.", ne.UpdateCount.ToString(), ne.UpdateTotalZipLength.ToString(), ne.UpdateTotalLength.ToString());
+            m_UpdateAllComplete = true;
+        }
 
-            m_UpdateCount = ne.UpdateCount;
-            m_UpdateTotalZipLength = ne.UpdateTotalZipLength;
-            if (m_UpdateCount <= 0)
+        private void RefreshProgress()
+        {
+            int currentTotalUpdateLength = 0;
+            for (int i = 0; i < m_UpdateLengthData.Count; i++)
             {
-                ProcessUpdateAllComplete();
+                currentTotalUpdateLength += m_UpdateLengthData[i].Length;
+            }
+
+            float progressTotal = (float)currentTotalUpdateLength / m_UpdateTotalZipLength;
+            string descriptionText = GameEntry.Localization.GetString("UpdateResource.Tips", m_UpdateSuccessCount.ToString(), m_UpdateCount.ToString(), GetLengthString(currentTotalUpdateLength), GetLengthString(m_UpdateTotalZipLength), progressTotal, GetLengthString((int)GameEntry.Download.CurrentSpeed));
+            m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);
+        }
+
+        private string GetLengthString(int length)
+        {
+            if (length < 1024)
+            {
+                return string.Format("{0} Bytes", length.ToString());
+            }
+
+            if (length < 1024 * 1024)
+            {
+                return string.Format("{0} KB", (length / 1024f).ToString("F2"));
+            }
+
+            if (length < 1024 * 1024 * 1024)
+            {
+                return string.Format("{0} MB", (length / 1024f / 1024f).ToString("F2"));
+            }
+
+            return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
+        }
+
+        private void OnCheckResourcesCompleteCallback(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
+        {
+            Log.Info("Check resources complete, '{0}' resources need to update, zip length is '{1}', unzip length is '{2}'.", updateCount.ToString(), updateTotalZipLength.ToString(), updateTotalLength.ToString());
+
+            m_UpdateCount = updateCount;
+            m_UpdateTotalZipLength = updateTotalZipLength;
+            if (!needUpdateResources)
+            {
+                ProcessUpdateResourcesComplete();
                 return;
             }
 
@@ -116,6 +149,12 @@ namespace StarForce
             }
 
             StartUpdateResources(null);
+        }
+
+        private void OnUpdateResourcesComplete()
+        {
+            Log.Info("Update resources complete.");
+            ProcessUpdateResourcesComplete();
         }
 
         private void OnResourceUpdateStart(object sender, GameEventArgs e)
@@ -196,50 +235,6 @@ namespace StarForce
             }
 
             Log.Warning("Update resource '{0}' is invalid.", ne.Name);
-        }
-
-        private void OnResourceUpdateAllComplete(object sender, GameEventArgs e)
-        {
-            Log.Info("All resources update complete.");
-            ProcessUpdateAllComplete();
-        }
-
-        private void ProcessUpdateAllComplete()
-        {
-            m_UpdateAllComplete = true;
-        }
-
-        private void RefreshProgress()
-        {
-            int currentTotalUpdateLength = 0;
-            for (int i = 0; i < m_UpdateLengthData.Count; i++)
-            {
-                currentTotalUpdateLength += m_UpdateLengthData[i].Length;
-            }
-
-            float progressTotal = (float)currentTotalUpdateLength / m_UpdateTotalZipLength;
-            string descriptionText = GameEntry.Localization.GetString("UpdateResource.Tips", m_UpdateSuccessCount.ToString(), m_UpdateCount.ToString(), GetLengthString(currentTotalUpdateLength), GetLengthString(m_UpdateTotalZipLength), progressTotal, GetLengthString((int)GameEntry.Download.CurrentSpeed));
-            m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);
-        }
-
-        private string GetLengthString(int length)
-        {
-            if (length < 1024)
-            {
-                return string.Format("{0} Bytes", length.ToString());
-            }
-
-            if (length < 1024 * 1024)
-            {
-                return string.Format("{0} KB", (length / 1024f).ToString("F2"));
-            }
-
-            if (length < 1024 * 1024 * 1024)
-            {
-                return string.Format("{0} MB", (length / 1024f / 1024f).ToString("F2"));
-            }
-
-            return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
         }
 
         private class UpdateLengthData

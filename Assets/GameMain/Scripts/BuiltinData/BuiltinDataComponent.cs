@@ -58,9 +58,6 @@ namespace StarForce
                 Log.Warning("Parse build info failure.");
                 return;
             }
-
-            GameEntry.Base.GameVersion = m_BuildInfo.GameVersion;
-            GameEntry.Base.InternalApplicationVersion = m_BuildInfo.InternalApplicationVersion;
         }
 
         public void InitDefaultDictionary()

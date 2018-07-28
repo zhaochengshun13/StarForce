@@ -1,5 +1,7 @@
 ﻿using GameFramework;
 using GameFramework.Event;
+using GameFramework.Fsm;
+using GameFramework.Procedure;
 using GameFramework.Resource;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -11,6 +13,7 @@ namespace StarForce
     {
         private bool m_LatestVersionComplete = false;
         private VersionInfo m_VersionInfo = null;
+        private UpdateVersionListCallbacks m_UpdateVersionListCallbacks = null;
 
         public override bool UseNativeDialog
         {
@@ -18,6 +21,13 @@ namespace StarForce
             {
                 return true;
             }
+        }
+
+        protected override void OnInit(ProcedureOwner procedureOwner)
+        {
+            base.OnInit(procedureOwner);
+
+            m_UpdateVersionListCallbacks = new UpdateVersionListCallbacks(OnUpdateVersionListSuccess, OnUpdateVersionListFailure);
         }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
@@ -29,8 +39,6 @@ namespace StarForce
 
             GameEntry.Event.Subscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
             GameEntry.Event.Subscribe(WebRequestFailureEventArgs.EventId, OnWebRequestFailure);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
-            GameEntry.Event.Subscribe(UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
 
             RequestVersion();
         }
@@ -39,8 +47,6 @@ namespace StarForce
         {
             GameEntry.Event.Unsubscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
             GameEntry.Event.Unsubscribe(WebRequestFailureEventArgs.EventId, OnWebRequestFailure);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs.EventId, OnVersionListUpdateSuccess);
-            GameEntry.Event.Unsubscribe(UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs.EventId, OnVersionListUpdateFailure);
 
             base.OnLeave(procedureOwner, isShutdown);
         }
@@ -89,7 +95,7 @@ namespace StarForce
             iOSSystemVersion = UnityEngine.iOS.Device.systemVersion;
             iOSVendorIdentifier = UnityEngine.iOS.Device.vendorIdentifier ?? string.Empty;
 #endif
-            string gameVersion = GameEntry.Base.GameVersion;
+            string gameVersion = Version.GameVersion;
             string platform = Application.platform.ToString();
             string language = GameEntry.Localization.Language.ToString();
             string unityVersion = Application.unityVersion;
@@ -137,7 +143,7 @@ namespace StarForce
             }
             else
             {
-                GameEntry.Resource.UpdateVersionList(m_VersionInfo.VersionListLength, m_VersionInfo.VersionListHashCode, m_VersionInfo.VersionListZipLength, m_VersionInfo.VersionListZipHashCode);
+                GameEntry.Resource.UpdateVersionList(m_VersionInfo.VersionListLength, m_VersionInfo.VersionListHashCode, m_VersionInfo.VersionListZipLength, m_VersionInfo.VersionListZipHashCode, m_UpdateVersionListCallbacks);
             }
         }
 
@@ -156,7 +162,7 @@ namespace StarForce
                 return;
             }
 
-            Log.Info("Latest game version is '{0}', local game version is '{1}'.", m_VersionInfo.LatestGameVersion, GameEntry.Base.GameVersion);
+            Log.Info("Latest game version is '{0}', local game version is '{1}'.", m_VersionInfo.LatestGameVersion, Version.GameVersion);
 
             if (m_VersionInfo.ForceGameUpdate)
             {
@@ -190,22 +196,20 @@ namespace StarForce
             Log.Warning("Check version failure, error message '{0}'.", ne.ErrorMessage);
         }
 
-        private void OnVersionListUpdateSuccess(object sender, GameEventArgs e)
+        private void OnUpdateVersionListSuccess(string downloadPath, string downloadUri)
         {
-            UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs ne = (UnityGameFramework.Runtime.VersionListUpdateSuccessEventArgs)e;
             m_LatestVersionComplete = true;
-            Log.Info("Download latest resource version list from '{0}' success.", ne.DownloadUri);
+            Log.Info("Update latest version list from '{0}' success.", downloadUri);
         }
 
-        private void OnVersionListUpdateFailure(object sender, GameEventArgs e)
+        private void OnUpdateVersionListFailure(string downloadUri, string errorMessage)
         {
-            UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs ne = (UnityGameFramework.Runtime.VersionListUpdateFailureEventArgs)e;
-            Log.Warning("Download latest resource version list from '{0}' failure, error message '{1}'.", ne.DownloadUri, ne.ErrorMessage);
+            Log.Warning("Update latest version list from '{0}' failure, error message '{1}'.", downloadUri, errorMessage);
         }
 
         private string GetResourceVersionName()
         {
-            string[] splitApplicableGameVersion = GameEntry.Base.GameVersion.Split('.');
+            string[] splitApplicableGameVersion = Version.GameVersion.Split('.');
             if (splitApplicableGameVersion.Length != 3)
             {
                 return string.Empty;
