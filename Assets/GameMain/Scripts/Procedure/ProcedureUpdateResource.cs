@@ -40,7 +40,7 @@ namespace StarForce
             GameEntry.Event.Subscribe(ResourceUpdateSuccessEventArgs.EventId, OnResourceUpdateSuccess);
             GameEntry.Event.Subscribe(ResourceUpdateFailureEventArgs.EventId, OnResourceUpdateFailure);
 
-            GameEntry.Resource.CheckResources(OnCheckResourcesCompleteCallback);
+            GameEntry.Resource.CheckResources(OnCheckResourcesComplete);
         }
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
@@ -120,7 +120,7 @@ namespace StarForce
             return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
         }
 
-        private void OnCheckResourcesCompleteCallback(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
+        private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
         {
             Log.Info("Check resources complete, '{0}' resources need to update, zip length is '{1}', unzip length is '{2}'.", updateCount.ToString(), updateTotalZipLength.ToString(), updateTotalLength.ToString());
 
