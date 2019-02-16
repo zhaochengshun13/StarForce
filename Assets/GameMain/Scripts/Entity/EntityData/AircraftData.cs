@@ -1,4 +1,11 @@
-﻿using GameFramework.DataTable;
+﻿//------------------------------------------------------------
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
+// Homepage: http://gameframework.cn/
+// Feedback: mailto:jiangyin@gameframework.cn
+//------------------------------------------------------------
+
+using GameFramework.DataTable;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -41,12 +48,12 @@ namespace StarForce
 
             m_ThrusterData = new ThrusterData(GameEntry.Entity.GenerateSerialId(), drAircraft.ThrusterId, Id, Camp);
 
-            for (int index = 0, weaponId = 0; (weaponId = drAircraft.GetWeaponIds(index)) > 0; index++)
+            for (int index = 0, weaponId = 0; (weaponId = drAircraft.GetWeaponIdAt(index)) > 0; index++)
             {
                 AttachWeaponData(new WeaponData(GameEntry.Entity.GenerateSerialId(), weaponId, Id, Camp));
             }
 
-            for (int index = 0, armorId = 0; (armorId = drAircraft.GetArmorIds(index)) > 0; index++)
+            for (int index = 0, armorId = 0; (armorId = drAircraft.GetArmorIdAt(index)) > 0; index++)
             {
                 AttachArmorData(new ArmorData(GameEntry.Entity.GenerateSerialId(), armorId, Id, Camp));
             }

@@ -1,11 +1,19 @@
-﻿using UnityGameFramework.Runtime;
+﻿//------------------------------------------------------------
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
+// Homepage: http://gameframework.cn/
+// Feedback: mailto:jiangyin@gameframework.cn
+//------------------------------------------------------------
+
+using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace StarForce
 {
     /// <summary>
     /// 游戏入口。
     /// </summary>
-    public partial class GameEntry
+    public partial class GameEntry : MonoBehaviour
     {
         /// <summary>
         /// 获取游戏基础组件。
