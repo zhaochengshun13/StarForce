@@ -11,7 +11,7 @@ namespace StarForce
     {
         private bool m_UpdateAllComplete = false;
         private int m_UpdateCount = 0;
-        private int m_UpdateTotalZipLength = 0;
+        private long m_UpdateTotalZipLength = 0L;
         private int m_UpdateSuccessCount = 0;
         private List<UpdateLengthData> m_UpdateLengthData = new List<UpdateLengthData>();
         private UpdateResourceForm m_UpdateResourceForm = null;
@@ -30,7 +30,7 @@ namespace StarForce
 
             m_UpdateAllComplete = false;
             m_UpdateCount = 0;
-            m_UpdateTotalZipLength = 0;
+            m_UpdateTotalZipLength = 0L;
             m_UpdateSuccessCount = 0;
             m_UpdateLengthData.Clear();
             m_UpdateResourceForm = null;
@@ -89,7 +89,7 @@ namespace StarForce
 
         private void RefreshProgress()
         {
-            int currentTotalUpdateLength = 0;
+            long currentTotalUpdateLength = 0L;
             for (int i = 0; i < m_UpdateLengthData.Count; i++)
             {
                 currentTotalUpdateLength += m_UpdateLengthData[i].Length;
@@ -100,7 +100,7 @@ namespace StarForce
             m_UpdateResourceForm.SetProgress(progressTotal, descriptionText);
         }
 
-        private string GetLengthString(int length)
+        private string GetLengthString(long length)
         {
             if (length < 1024)
             {
@@ -120,7 +120,7 @@ namespace StarForce
             return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
         }
 
-        private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
+        private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, long updateTotalLength, long updateTotalZipLength)
         {
             Log.Info("Check resources complete, '{0}' resources need to update, zip length is '{1}', unzip length is '{2}'.", updateCount.ToString(), updateTotalZipLength.ToString(), updateTotalLength.ToString());
 
