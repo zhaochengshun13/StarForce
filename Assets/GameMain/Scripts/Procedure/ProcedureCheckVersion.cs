@@ -229,20 +229,15 @@ namespace StarForce
             {
                 case RuntimePlatform.WindowsEditor:
                 case RuntimePlatform.WindowsPlayer:
-                    return "windows";
                 case RuntimePlatform.OSXEditor:
                 case RuntimePlatform.OSXPlayer:
-                    return "osx";
                 case RuntimePlatform.IPhonePlayer:
-                    return "ios";
                 case RuntimePlatform.Android:
-                    return "android";
                 case RuntimePlatform.WSAPlayerX86:
                 case RuntimePlatform.WSAPlayerX64:
                 case RuntimePlatform.WSAPlayerARM:
-                    return "winstore";
                 default:
-                    return string.Empty;
+                    return "Windows";
             }
         }
     }
