@@ -151,10 +151,17 @@ namespace StarForce
             StartUpdateResources(null);
         }
 
-        private void OnUpdateResourcesComplete()
+        private void OnUpdateResourcesComplete(bool result)
         {
-            Log.Info("Update resources complete.");
-            ProcessUpdateResourcesComplete();
+            if (result)
+            {
+                Log.Info("Update resources complete with no errors.");
+                ProcessUpdateResourcesComplete();
+            }
+            else
+            {
+                Log.Error("Update resources complete with errors.");
+            }
         }
 
         private void OnResourceUpdateStart(object sender, GameEventArgs e)
